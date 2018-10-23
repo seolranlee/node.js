@@ -7,6 +7,26 @@ app.set('view engine', 'pug');
 // 명시하지 않아도 jade는 views 디렉토리를 템플릿 디렉토리로 찾긴한다.
 app.set('views', './views');
 app.use(express.static('public'));
+
+// 시맨틱url 방식
+app.get('/topic/:id', function(req, res){
+    var topics = [
+        'Javascript is...',
+        'Nodejs is...',
+        'Express is...'
+    ];
+    var output = `
+        <a href="/topic?id=0">JavaScript</a><br>
+        <a href="/topic?id=1">Nodejs</a><br>
+        <a href="/topic?id=2">Express</a><br><br>
+        ${topics[req.params.id]}
+    `
+    // query스트링
+    res.send(output);
+});
+app.get('/topic/:id/:mode', function(req, res){
+   res.send(req.params.id +','+ req.params.mode)
+});
 app.get('/template', function(req, res){
     // views안에 temp파일을 불러들인다.
     // 두번째 인자에 템플릿 안에서 사용할 데이터를 '객체'로 전달할 수 있다.
