@@ -6,9 +6,9 @@ html
         h1
             a(href='/topic') Server Side JavaScript
         ul
-            each topic in topics
+            each item in topics
                 li
-                    a(href='/topic/'+topic.id)= topic.title
+                    a(href='/topic/'+item.id)= item.title
         article
             if topic
                 h2= topic.title
@@ -17,5 +17,11 @@ html
             else
                 h2 Welcome
                 p This is sever side javascript tutorial.
-        div
-            a(href='/topic/new') new
+        ul
+            li
+                a(href='/topic/add') add
+            if topic
+                li
+                    a(href='/topic/'+topic.id+'/edit') edit
+                li
+                    a(href='/topic/' + topic.id + '/delete') delete
