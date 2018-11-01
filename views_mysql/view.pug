@@ -1,0 +1,21 @@
+doctype html
+html
+    head
+        meta(charest='utf-8')
+    body
+        h1
+            a(href='/topic') Server Side JavaScript
+        ul
+            each topic in topics
+                li
+                    a(href='/topic/'+topic.id)= topic.title
+        article
+            if topic
+                h2= topic.title
+                p= topic.description
+                p= 'by '+topic.author
+            else
+                h2 Welcome
+                p This is sever side javascript tutorial.
+        div
+            a(href='/topic/new') new
