@@ -153,7 +153,6 @@ app.get(['/topic', '/topic/:id'], function(req, res){
 
             })
         }else{
-            console.log('test');
             res.render('view', {topics: topics});
         }
     });
