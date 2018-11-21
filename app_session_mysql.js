@@ -17,6 +17,16 @@ var options = {
     database: 'o2'
 };
 
+var mysql      = require('mysql');
+var conn = mysql.createConnection({
+    host     : 'localhost',
+    user     : 'root',
+    password : '1111',
+    database : 'o2'
+});
+conn.connect();
+
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(session({
     secret: '234u823?!@#$%@#sdfkl',
@@ -54,23 +64,42 @@ app.get('/welcome',function(req,res) {
     // res.send(req.session)
 });
 app.post('/auth/login',function (req,res) {
-    var user = {
-        username: 'seolran',    // 로그인시 아이디
-        password: '111',
-        displayName: '설란'   // 닉네임같은것
-    };
-    var username = req.body.username;
-    var password = req.body.password;
-    if(username === user.username && password === user.password){
-        req.session.displayName = user.displayName;
-        // save가 끝난 다음에 welcome으로 이동하게.
-        // 안전하게.
-        req.session.save(function(){
-            res.redirect('/welcome');
-        });
-    }else{
-        res.send('아이디나 비밀번호를 확인하세요. <a href="/auth/login">login</a>')
-    }
+    var sql = `SELECT * FROM user WHERE username="${req.body.username}"`;
+    conn.query(sql, function(err, rows){
+        if(err){
+            console.log(err);
+            res.status(500).send('Internal Server Error');
+        }
+        if(rows.length > 0){
+            if (req.body.password === rows[0].password ){
+                req.session.displayName = rows[0].displayName;
+                req.session.save(function(){
+                    res.redirect('/welcome');
+                });
+            }else{
+                res.send('비밀번호를 확인하세요. <a href="/auth/login">login</a>')
+            }
+        }else {
+            res.send('아이디를 확인하세요. <a href="/auth/login">login</a>')
+        }
+    });
+
+    // var user = {
+    //     username: 'seolran',    // 로그인시 아이디
+    //     password: '111',
+    //     displayName: '설란'   // 닉네임같은것
+    // };
+    //
+    // if(username === user.username && password === user.password){
+    //     req.session.displayName = user.displayName;
+    //     // save가 끝난 다음에 welcome으로 이동하게.
+    //     // 안전하게.
+    //     req.session.save(function(){
+    //         res.redirect('/welcome');
+    //     });
+    // }else{
+    //     res.send('아이디나 비밀번호를 확인하세요. <a href="/auth/login">login</a>')
+    // }
 });
 app.get('/auth/login', function (req, res){
     var output = `
