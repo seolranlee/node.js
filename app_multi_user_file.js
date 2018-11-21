@@ -7,6 +7,7 @@ var session = require('express-session');
 // FileStore는 express-session과 의존관계
 var FileStore = require('session-file-store')(session);
 var bodyParser = require('body-parser');
+var sha256 = require('sha256');
 var app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -45,12 +46,18 @@ app.get('/auth/register', function (req,res){
    `;
    res.send(output)
 });
-
 var users = [
     {
         username: 'seolran',    // 로그인시 아이디
-        password: '111',
+        password: '4eaa90a269a846acf65a59030a31403db814b23aafc83e4de71170c72920acfe',
+        salt: '@#$!@#@#$asdf',
         displayName: '설란'   // 닉네임같은것
+    },
+    {
+        username: 'wendy',    // 로그인시 아이디
+        password: '54b9c7b7027db9a815a4b86a0d4a7ab4320f31b927b802df58422372879cc1d2',
+        salt: '@#$asdjflkzxc@#$',
+        displayName: '승완'   // 닉네임같은것
     },
 ];
 app.post('/auth/register',function (req,res){
@@ -113,7 +120,7 @@ app.post('/auth/login',function (req,res) {
     var username = req.body.username;
     var password = req.body.password;
     for(var i=0; i<users.length; i++){
-        if(username === users[i].username && password === users[i].password){
+        if(username === users[i].username && sha256(password+users[i].salt) === users[i].password){  // 사용자가 입력한 값도 암호화시켜야 한다.
             req.session.displayName = users[i].displayName;
             // 이게 필요해.
             return req.session.save(function(){ // for문 안에서의 동작은 return을 만나면 중지된다.
