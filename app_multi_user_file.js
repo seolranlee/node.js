@@ -7,7 +7,9 @@ var session = require('express-session');
 // FileStore는 express-session과 의존관계
 var FileStore = require('session-file-store')(session);
 var bodyParser = require('body-parser');
-var sha256 = require('sha256');
+// var sha256 = require('sha256');
+var bkfd2Password = require("pbkdf2-password");
+var hasher = bkfd2Password();
 var app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -49,27 +51,25 @@ app.get('/auth/register', function (req,res){
 var users = [
     {
         username: 'seolran',    // 로그인시 아이디
-        password: '4eaa90a269a846acf65a59030a31403db814b23aafc83e4de71170c72920acfe',
-        salt: '@#$!@#@#$asdf',
+        password: 'hJApKROSvYY/UOa2383plXDERO8X8qJRhtkf7VtbNf2Ynv881BCP4/PKovHhbO7UjZOqD7BB7N8384PVM8unvHIVPO0pHrOx0eWubD4WttIMi29vGzaTT1rchxhfvdYR9p71RZH51E0+VDgMWBr8oVD8fWCSl9c1hr7FAn0I7g8=',
+        salt: 'ZivdoZqoP+nkO9YIUFkaf1vjZeon0zVEbtvvqJ7Lx/+aetyrMpZ0hV8qj8ieLCQxRnHmdlDnN3GvQTNOasqDXQ==',
         displayName: '설란'   // 닉네임같은것
-    },
-    {
-        username: 'wendy',    // 로그인시 아이디
-        password: '54b9c7b7027db9a815a4b86a0d4a7ab4320f31b927b802df58422372879cc1d2',
-        salt: '@#$asdjflkzxc@#$',
-        displayName: '승완'   // 닉네임같은것
     },
 ];
 app.post('/auth/register',function (req,res){
-    var user = {
-        username: req.body.username,
-        password: req.body.password,
-        displayName: req.body.displayName
-    };
-    users.push(user);
-    req.session.displayName = req.body.displayName;
-    req.session.save(function () {
-        res.redirect('/welcome');
+    hasher({password: req.body.password}, function(err, pass, salt, hash){
+        var user = {
+            username: req.body.username,
+            password: hash,
+            salt: salt,
+            displayName: req.body.displayName
+        };
+        users.push(user);
+        req.session.displayName = req.body.displayName;
+        req.session.save(function () {
+            res.redirect('/welcome');
+        });
+
     });
 
 });
@@ -120,13 +120,27 @@ app.post('/auth/login',function (req,res) {
     var username = req.body.username;
     var password = req.body.password;
     for(var i=0; i<users.length; i++){
-        if(username === users[i].username && sha256(password+users[i].salt) === users[i].password){  // 사용자가 입력한 값도 암호화시켜야 한다.
-            req.session.displayName = users[i].displayName;
-            // 이게 필요해.
-            return req.session.save(function(){ // for문 안에서의 동작은 return을 만나면 중지된다.
-                res.redirect('/welcome');
-            });
+        
+        if (username === users[i].username){
+            return hasher({password: password, salt: users[i].salt}, function (err, pass, salt, hash) {
+                if(hash === users[i].password){
+                    req.session.displayName = users[i].displayName;
+                    req.session.save(function(){
+                        res.redirect('/welcome');
+                    });
+                }else{
+                    res.send('아이디나 비밀번호를 확인하세요. <a href="/auth/login">login</a>');
+                }
+            })
         }
+
+        // if(username === users[i].username && sha256(password+users[i].salt) === users[i].password){  // 사용자가 입력한 값도 암호화시켜야 한다.
+        //     req.session.displayName = users[i].displayName;
+        //     // 이게 필요해.
+        //     return req.session.save(function(){ // for문 안에서의 동작은 return을 만나면 중지된다.
+        //         res.redirect('/welcome');
+        //     });
+        // }
         // else{
         //     res.send('아이디나 비밀번호를 확인하세요. <a href="/auth/login">login</a>');
         // }

@@ -7,6 +7,8 @@ var session = require('express-session');
 // FileStore는 express-session과 의존관계
 var MySQLStore = require('express-mysql-session')(session);
 var bodyParser = require('body-parser');
+var bkfd2Password = require("pbkdf2-password");
+var hasher = bkfd2Password();
 var app = express();
 
 var options = {
@@ -64,25 +66,25 @@ app.get('/auth/register', function (req,res){
 });
 
 app.post('/auth/register',function (req,res){
-    var user = {
-        username: req.body.username,
-        password: req.body.password,
-        displayName: req.body.displayName
-    };
-    var sql = 'INSERT INTO user (username, password, displayName) VALUES (?, ?, ?)';
-    conn.query(sql, [user.username, user.password, user.displayName], function(err, result, fields){
-        if(err){
-            console.log(err);
-            res.status(500).send('Internal Server Error');
-        }
-        req.session.displayName = req.body.displayName;
-        req.session.save(function () {
-            res.redirect('/welcome');
+    hasher({password: req.body.password}, function(err, pass, salt, hash){
+        var user = {
+            username: req.body.username,
+            password: hash,
+            salt: salt,
+            displayName: req.body.displayName,
+        };
+        var sql = 'INSERT INTO user (username, password, salt, displayName) VALUES (?, ?, ?, ?)';
+        conn.query(sql, [user.username, user.password, user.salt, user.displayName, user.salt], function(err, result, fields){
+            if(err){
+                console.log(err);
+                res.status(500).send('Internal Server Error');
+            }
+            req.session.displayName = req.body.displayName;
+            req.session.save(function () {
+                res.redirect('/welcome');
+            });
         });
     });
-
-
-
 });
 app.get('/auth/logout', function (req,res) {
     delete req.session.displayName;
@@ -127,22 +129,26 @@ app.get('/welcome',function(req,res) {
 });
 
 app.post('/auth/login',function (req,res) {
-
-    var sql = `SELECT * FROM user WHERE username="${req.body.username}"`;
+    var username = req.body.username;
+    var password = req.body.password;
+    var sql = `SELECT * FROM user WHERE username="${username}"`;
     conn.query(sql, function(err, rows){
         if(err){
             console.log(err);
             res.status(500).send('Internal Server Error');
         }
         if(rows.length > 0){
-            if (req.body.password === rows[0].password ){
-                req.session.displayName = rows[0].displayName;
-                req.session.save(function(){
-                    res.redirect('/welcome');
-                });
-            }else{
-                res.send('비밀번호를 확인하세요. <a href="/auth/login">login</a>')
-            }
+            console.log(rows[0]);
+            return hasher({password: password, salt: rows[0].salt}, function (err, pass, salt, hash) {
+                if(hash === rows[0].password){
+                    req.session.displayName = rows[0].displayName;
+                    req.session.save(function(){
+                        res.redirect('/welcome');
+                    });
+                }else{
+                    res.send('아이디나 비밀번호를 확인하세요. <a href="/auth/login">login</a>');
+                }
+            })
         }else {
             res.send('아이디를 확인하세요. <a href="/auth/login">login</a>')
         }
