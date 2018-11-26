@@ -147,6 +147,7 @@ passport.deserializeUser(function(id, done) {  //2(순서)
     conn.query(sql, function(err, user){
         if(err){
             console.log(err);
+            done(err, false);
         }
         if(user.length > 0){
             return done(null, user[0]);
@@ -162,7 +163,7 @@ passport.use(new LocalStrategy(     // new=> 객체를 생성
         conn.query(sql, function(err, rows){
             if(err){
                 console.log(err);
-                done(null, false);
+                done(err, false);
             }
             if(rows.length > 0){
                 return hasher({password: password, salt: rows[0].salt}, function (err, pass, salt, hash) {
@@ -192,33 +193,6 @@ app.post(
         }
     )
 );
-
-// app.post('/auth/login',function (req,res) {
-//     var username = req.body.username;
-//     var password = req.body.password;
-//     var sql = `SELECT * FROM user WHERE username="${username}"`;
-//     conn.query(sql, function(err, rows){
-//         if(err){
-//             console.log(err);
-//             res.status(500).send('Internal Server Error');
-//         }
-//         if(rows.length > 0){
-//             console.log(rows[0]);
-//             return hasher({password: password, salt: rows[0].salt}, function (err, pass, salt, hash) {
-//                 if(hash === rows[0].password){
-//                     req.session.displayName = rows[0].displayName;
-//                     req.session.save(function(){
-//                         res.redirect('/welcome');
-//                     });
-//                 }else{
-//                     res.send('아이디나 비밀번호를 확인하세요. <a href="/auth/login">login</a>');
-//                 }
-//             })
-//         }else {
-//             res.send('아이디를 확인하세요. <a href="/auth/login">login</a>')
-//         }
-//     });
-// });
 
 app.listen(3003, function (){
     console.log('Connected 3003')
