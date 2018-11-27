@@ -47,42 +47,7 @@ app.get('/count',function (req,res) {
     }
     res.send('count : '+req.session.count)
 });
-app.get('/auth/register', function (req,res){
-   res.render('auth/register')
-});
-app.post('/auth/register',function (req,res){
-    hasher({password: req.body.password}, function(err, pass, salt, hash){
-        var user = {
-            authId: 'local:'+req.body.username,
-            username: req.body.username,
-            password: hash,
-            salt: salt,
-            displayName: req.body.displayName
-        };
-        var sql = 'INSERT INTO users SET ?';
-        conn.query(sql, user, function(err, results) {
-            if(err){
-                console.log(err);
-                res.status(500);
-            } else{
-                req.login(user, function (err) {
-                    req.session.save(function () {
-                        res.redirect('/welcome');
-                    });
-                });
-            }
-        });
-    });
-});
-app.get('/auth/logout', function (req,res) {
-    req.logout();
-    req.session.save(function(){
-        res.redirect('/welcome');
-    });
-});
-app.get('/auth/login', function (req, res){
-    res.render('auth/login')
-});
+
 app.get('/welcome',function(req,res) {
     if(req.user && req.user.displayName){   // passport는 user라는 사용자 정보를 만들어준다.
         // // deserializeUser가 done할때 던져준 user가 passport user객체가 된다.
@@ -181,34 +146,8 @@ passport.use(new FacebookStrategy({
     }
 ));
 
-app.post(
-    '/auth/login',
-    passport.authenticate(  // 미들웨어(콜백함수를 만들어주는 역할)가 실행.
-        'local',
-        {
-            successRedirect: '/welcome',
-            failureRedirect: '/auth/login',
-            failureFlash: false
-        }
-    )
-);
-app.get(
-    '/auth/facebook',
-    passport.authenticate(
-        'facebook',
-        { scope: 'email' }  // 받아올 수 있는 정보의 scope(범위)
-    )
-);
-app.get(
-    '/auth/facebook/callback',
-    passport.authenticate(
-        'facebook',
-        {
-            successRedirect: '/welcome',
-            failureRedirect: '/auth/login',
-        }
-    )
-);
+var auth = require('./routes/mysql/auth')(passport);    // auth.js 내부에 함수의 인자로 passport를 주입.
+app.use('/auth/', auth);    // /auth로 들어오는 모든 요청에 대해서 auth라는 라우트가 처리하도록 위임
 
 app.listen(3003, function (){
     console.log('Connected 3003')
