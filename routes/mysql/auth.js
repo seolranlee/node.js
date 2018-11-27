@@ -8,7 +8,7 @@ module.exports = function (passport) {
         passport.authenticate(  // 미들웨어(콜백함수를 만들어주는 역할)가 실행.
             'local',
             {
-                successRedirect: '/welcome',
+                successRedirect: '/topic',
                 failureRedirect: '/auth/login',
                 failureFlash: false
             }
@@ -26,7 +26,7 @@ module.exports = function (passport) {
         passport.authenticate(
             'facebook',
             {
-                successRedirect: '/welcome',
+                successRedirect: '/topic',
                 failureRedirect: '/auth/login',
             }
         )
@@ -56,16 +56,23 @@ module.exports = function (passport) {
         });
     });
     route.get('/register', function (req,res){
-        res.render('auth/register')
+        var sql = 'SELECT id, title FROM topic';
+        conn.query(sql, function(err, topics, fields){
+            res.render('auth/register', {topics: topics})
+        });
     });
     route.get('/logout', function (req,res) {
         req.logout();
         req.session.save(function(){
-            res.redirect('/welcome');
+            res.redirect('/topic');
         });
     });
     route.get('/login', function (req, res){
-        res.render('auth/login')
+        var sql = 'SELECT id, title FROM topic';
+        conn.query(sql, function(err, topics, fields){
+            res.render('auth/login', {topics: topics})
+        });
+
     });
     return route;
 };
