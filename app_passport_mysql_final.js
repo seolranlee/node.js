@@ -17,7 +17,8 @@ var conn = mysql.createConnection({
 
 conn.connect();
 var app = express();
-
+app.set('views', './views/mysql');
+app.set('view engine', 'pug');
 var options = {
     host: 'localhost',
     port: 3306, // mysql 은 기본이 3306임.
@@ -47,24 +48,7 @@ app.get('/count',function (req,res) {
     res.send('count : '+req.session.count)
 });
 app.get('/auth/register', function (req,res){
-   var output = `
-   <h1>Register</h1>
-   <form action="/auth/register" method="post">
-        <p>
-            <input type="text" name="username" placeholder="username">
-        </p>
-        <p>
-            <input type="password" name="password" placeholder="password">
-        </p>
-        <p>
-            <input type="text" name="displayName" placeholder="displayName">
-        </p>
-        <p>
-            <input type="submit">
-        </p>
-    </form>
-   `;
-   res.send(output)
+   res.render('auth/register')
 });
 app.post('/auth/register',function (req,res){
     hasher({password: req.body.password}, function(err, pass, salt, hash){
@@ -97,22 +81,7 @@ app.get('/auth/logout', function (req,res) {
     });
 });
 app.get('/auth/login', function (req, res){
-    var output = `
-    <h1>Login</h1>
-    <form action="/auth/login" method="post">
-        <p>
-            <input type="text" name="username" placeholder="username">
-        </p>
-        <p>
-            <input type="password" name="password" placeholder="password">
-        </p>
-        <p>
-            <input type="submit">
-        </p>
-    </form>
-    <a href="/auth/facebook">facebook</a>
-    `;
-    res.send(output)
+    res.render('auth/login')
 });
 app.get('/welcome',function(req,res) {
     if(req.user && req.user.displayName){   // passport는 user라는 사용자 정보를 만들어준다.
