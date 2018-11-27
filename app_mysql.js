@@ -25,7 +25,7 @@ var app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.locals.pretty = true;
 app.use('/user', express.static('uploads'));
-app.set('views', './views_mysql');
+app.set('views', './views/mysql');
 app.set('view engine', 'pug');
 
 // 뒤에 콜백함수가 실행되기 전에 미들웨어(upload.single())가 실행된다.
@@ -42,7 +42,7 @@ app.get('/topic/add', function(req, res){
           console.log(err);
           res.status(500).send('Internal Server Error');
       }
-        res.render('add', {topics: topics});
+        res.render('topic/add', {topics: topics});
     })
 });
 
@@ -72,7 +72,7 @@ app.get(['/topic/:id/edit'], function(req, res){
                     console.log(err);
                     res.status(500).send('Internal Server Error');
                 }else{
-                    res.render('edit',  {topics: topics, topic: topic[0]});
+                    res.render('topic/edit',  {topics: topics, topic: topic[0]});
                 }
 
             })
@@ -115,7 +115,7 @@ app.get('/topic/:id/delete', function(req, res){
                     console.log('There is no record.');
                     res.status(500).send('Internal Server Error');
                 }else{
-                    res.render('delete', {topics: topics, topic: topic[0]});
+                    res.render('topic/delete', {topics: topics, topic: topic[0]});
                 }
             }
         });
@@ -148,12 +148,12 @@ app.get(['/topic', '/topic/:id'], function(req, res){
                     res.status(500).send('Internal Server Error');
                 }else{
                     // res.send(rows);
-                    res.render('view',  {topics: topics, topic: topic[0]});
+                    res.render('topic/view',  {topics: topics, topic: topic[0]});
                 }
 
             })
         }else{
-            res.render('view', {topics: topics});
+            res.render('topic/view', {topics: topics});
         }
     });
 });
